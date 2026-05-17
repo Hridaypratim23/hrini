@@ -98,6 +98,10 @@ export default function MessagesPage() {
           )
         })
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+        const deleted = payload.old as { id: string }
+        setMessages((prev) => prev.filter((m) => m.id !== deleted.id))
+      })
       .subscribe()
 
     // When partner reads our messages, update local read_at
@@ -279,11 +283,16 @@ export default function MessagesPage() {
 
   async function sendPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !userId) return
+    if (!file || !userId) { setShowActions(false); return }
     setShowActions(false)
+    setSending(true)
     const path = `${userId}/${Date.now()}.${file.name.split('.').pop()}`
     const { data: up, error } = await supabase.storage.from('photos').upload(path, file)
-    if (!error && up) {
+    if (error || !up) {
+      console.error('Photo upload failed:', error)
+      alert('Could not upload photo. Make sure the photos storage bucket exists and is public in Supabase.')
+      setSending(false)
+    } else {
       const { data: url } = supabase.storage.from('photos').getPublicUrl(up.path)
       await send('📸 Photo', 'photo', url.publicUrl)
     }
@@ -325,6 +334,12 @@ export default function MessagesPage() {
         }))
       }
     }
+  }
+
+  async function deleteMessage(messageId: string) {
+    setEmojiPicker(null)
+    setMessages((prev) => prev.filter((m) => m.id !== messageId))
+    await supabase.from('messages').delete().eq('id', messageId).eq('from_user_id', userId!)
   }
 
   function startLongPress(messageId: string, e: React.TouchEvent | React.MouseEvent) {
@@ -697,17 +712,29 @@ export default function MessagesPage() {
           >
             💫 Quote
           </button>
-          <button
-            onClick={() => { setShowActions(false); fileRef.current?.click() }}
-            disabled={sending}
-            className="flex-1 py-2.5 rounded-xl text-xs font-medium border transition-opacity disabled:opacity-50"
-            style={{ borderColor: '#A8A29E', color: '#A8A29E', backgroundColor: 'rgba(168,162,158,0.08)' }}
+          <label
+            htmlFor="photo-file-input"
+            className="flex-1 py-2.5 rounded-xl text-xs font-medium border transition-opacity text-center cursor-pointer"
+            style={{
+              borderColor: sending ? '#3D3633' : '#A8A29E',
+              color: '#A8A29E',
+              backgroundColor: 'rgba(168,162,158,0.08)',
+              opacity: sending ? 0.5 : 1,
+              pointerEvents: sending ? 'none' : 'auto',
+            }}
           >
             📸 Photo
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={sendPhoto} />
+          </label>
         </div>
       )}
+      <input
+        id="photo-file-input"
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={sendPhoto}
+        style={{ position: 'fixed', top: -9999, left: -9999, opacity: 0 }}
+      />
 
       {/* ── Composer ───────────────────────────────────────────── */}
       <div
