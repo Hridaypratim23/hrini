@@ -295,7 +295,7 @@ export default function HomeClient() {
     if (!show) return null
     return (
       <div
-        style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
         onClick={(e) => { if (e.target === e.currentTarget) onDismiss() }}
       >
         <div style={{
@@ -304,7 +304,7 @@ export default function HomeClient() {
           backgroundColor: '#18140F',
           border: '1px solid #2E2822', borderBottom: 'none',
           padding: '0 20px',
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 48px)',
         }}>
           <div style={{ width: '36px', height: '4px', borderRadius: '99px', backgroundColor: '#3D3633', margin: '14px auto 22px' }} />
           {children}
