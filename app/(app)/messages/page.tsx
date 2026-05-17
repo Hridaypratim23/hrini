@@ -33,10 +33,13 @@ export default function MessagesPage() {
   const [showActions, setShowActions] = useState(false)
   const [reactions, setReactions] = useState<ReactionsMap>({})
   const [emojiPicker, setEmojiPicker] = useState<EmojiPickerState | null>(null)
+  const [partnerTyping, setPartnerTyping] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const markedRead = useRef(false)
   const longPressTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastTypingSent = useRef(0)
 
   const partnerName = partnerProfile?.name || 'Rajreeni'
   const myName = profile?.name || 'Hriday'
@@ -66,6 +69,7 @@ export default function MessagesPage() {
         const msg = payload as MessageWithRead
         if (seenIds.has(msg.id)) return
         seenIds.add(msg.id)
+        setPartnerTyping(false)
         setMessages((prev) => {
           const filtered = prev.filter((m) => m.id !== msg.id && m.id !== payload.optimistic_id)
           return [...filtered, msg].sort((a, b) =>
@@ -73,6 +77,11 @@ export default function MessagesPage() {
           )
         })
         if (partnerProfile?.id) markPartnerMessagesRead(partnerProfile.id)
+      })
+      .on('broadcast', { event: 'typing' }, () => {
+        setPartnerTyping(true)
+        if (typingTimeout.current) clearTimeout(typingTimeout.current)
+        typingTimeout.current = setTimeout(() => setPartnerTyping(false), 3000)
       })
       .subscribe()
 
@@ -237,6 +246,19 @@ export default function MessagesPage() {
       notifyPartner(partnerProfile.id, titles[type], bodies[type], '/messages')
     }
     setSending(false)
+  }
+
+  function handleTextChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setText(e.target.value)
+    const now = Date.now()
+    if (now - lastTypingSent.current > 2000) {
+      lastTypingSent.current = now
+      supabase.channel('hrini-messages-broadcast').send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {},
+      })
+    }
   }
 
   async function sendText() {
@@ -501,6 +523,21 @@ export default function MessagesPage() {
       className="flex flex-col"
       style={{ height: '100dvh', backgroundColor: '#1C1917' }}
     >
+      <style>{`
+        @keyframes typing-bounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+          30% { transform: translateY(-5px); opacity: 1; }
+        }
+        .typing-dot {
+          display: inline-block;
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          background: #A8A29E;
+          animation: typing-bounce 1.2s ease-in-out infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.18s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.36s; }
+      `}</style>
       {/* ── Header ─────────────────────────────────────────────── */}
       <header
         className="flex-none flex items-center gap-3 px-4 border-b"
@@ -588,6 +625,18 @@ export default function MessagesPage() {
           </div>
         )}
         {messages.map(renderMessage)}
+        {partnerTyping && (
+          <div className="flex px-4 my-1">
+            <div
+              className="px-4 py-3 rounded-2xl flex items-center gap-1"
+              style={{ backgroundColor: '#292524', borderBottomLeftRadius: '4px' }}
+            >
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -688,7 +737,7 @@ export default function MessagesPage() {
           type="text"
           placeholder="Say something sweet…"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleTextChange}
           onKeyDown={(e) => e.key === 'Enter' && sendText()}
           className="flex-1 rounded-2xl border px-4 py-2.5 text-sm outline-none"
           style={{
