@@ -321,37 +321,17 @@ export default function MessagesPage() {
 
   const handleOverlayTap = useCallback(() => setEmojiPicker(null), [])
 
-  function Ticks({ msg }: { msg: MessageWithRead }) {
-    if (msg.from_user_id !== userId) return null
-    const isOptimistic = msg.id.startsWith('optimistic-')
-    const isRead = !!msg.read_at
-    return (
-      <span
-        className="ml-1"
-        style={{
-          fontSize: '0.6rem',
-          color: isOptimistic ? 'rgba(28,25,23,0.4)' : isRead ? '#D4A0A7' : 'rgba(28,25,23,0.45)',
-          letterSpacing: '-0.05em',
-        }}
-      >
-        {isOptimistic ? '✓' : '✓✓'}
-      </span>
-    )
-  }
-
-  function TicksLight({ msg }: { msg: MessageWithRead }) {
-    if (msg.from_user_id !== userId) return null
-    const isOptimistic = msg.id.startsWith('optimistic-')
-    const isRead = !!msg.read_at
+  function ReadLabel({ msg, dark }: { msg: MessageWithRead; dark?: boolean }) {
+    if (msg.from_user_id !== userId || !msg.read_at) return null
     return (
       <span
         style={{
           fontSize: '0.6rem',
-          color: isRead ? '#D4A0A7' : '#6B6360',
-          letterSpacing: '-0.05em',
+          color: dark ? 'rgba(28,25,23,0.55)' : '#D4A0A7',
+          fontWeight: 500,
         }}
       >
-        {isOptimistic ? '✓' : '✓✓'}
+        read
       </span>
     )
   }
@@ -419,7 +399,7 @@ export default function MessagesPage() {
               </p>
               <div className="flex items-center justify-center gap-1 mt-1">
                 <p className="text-xs" style={{ color: '#A8A29E' }}>{time}</p>
-                <TicksLight msg={msg} />
+                <ReadLabel msg={msg} />
               </div>
             </div>
             <div className="mt-1 px-2">{renderReactions(msg.id)}</div>
@@ -450,7 +430,7 @@ export default function MessagesPage() {
               </p>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <p className="text-xs" style={{ color: '#A8A29E' }}>from {name} · {time}</p>
-                <TicksLight msg={msg} />
+                <ReadLabel msg={msg} />
               </div>
             </div>
             <div className="mt-1 px-2">{renderReactions(msg.id)}</div>
@@ -475,7 +455,7 @@ export default function MessagesPage() {
             )}
             <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
               <p className="text-xs" style={{ color: '#A8A29E' }}>{time}</p>
-              <TicksLight msg={msg} />
+              <ReadLabel msg={msg} />
             </div>
             <div className={isMe ? 'flex justify-end' : ''}>{renderReactions(msg.id)}</div>
           </div>
@@ -498,7 +478,7 @@ export default function MessagesPage() {
             {...longPressProps}
           >
             <p className="text-sm leading-relaxed">{msg.content}</p>
-            <div className={`flex items-center gap-0.5 mt-0.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex items-center gap-1 mt-0.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
               <p
                 style={{
                   color: isMe ? 'rgba(28,25,23,0.5)' : '#A8A29E',
@@ -507,7 +487,7 @@ export default function MessagesPage() {
               >
                 {time}
               </p>
-              <Ticks msg={msg} />
+              <ReadLabel msg={msg} dark={isMe} />
             </div>
           </div>
           <div className={isMe ? 'flex justify-end mt-1' : 'mt-1'}>{renderReactions(msg.id)}</div>
@@ -686,7 +666,7 @@ export default function MessagesPage() {
         style={{
           backgroundColor: '#1C1917',
           borderColor: '#3D3633',
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 68px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 88px)',
         }}
       >
         {/* + / × toggle */}
