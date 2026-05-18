@@ -91,7 +91,7 @@ function PersistentNav() {
     { href: '/morning-note', label: 'Notes', icon: '✍️' },
     { href: '/love-jar', label: 'Love Jar', icon: '💌' },
     { href: '/love-language', label: 'Love Log', icon: '❤️' },
-    { href: '/bucket-list', label: 'Dreams', icon: '🗺️' },
+    { href: '/milestones', label: 'Story', icon: '💍' },
   ]
 
   if (isOnMessages && keyboardVisible) return null
