@@ -26,8 +26,17 @@ function PersistentNav() {
   const { userId, partnerProfile } = useApp()
   const supabase = createClient()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [keyboardVisible, setKeyboardVisible] = useState(false)
 
   const isOnMessages = pathname === '/messages'
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const onResize = () => setKeyboardVisible(window.innerHeight - vv.height > 150)
+    vv.addEventListener('resize', onResize)
+    return () => vv.removeEventListener('resize', onResize)
+  }, [])
 
   // Mark as seen when on messages page
   useEffect(() => {
@@ -84,6 +93,8 @@ function PersistentNav() {
     { href: '/love-language', label: 'Love Log', icon: '❤️' },
     { href: '/bucket-list', label: 'Dreams', icon: '🗺️' },
   ]
+
+  if (isOnMessages && keyboardVisible) return null
 
   return (
     <nav

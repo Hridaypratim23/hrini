@@ -32,6 +32,7 @@ export default function MessagesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [fullscreenPhoto, setFullscreenPhoto] = useState<string | null>(null)
   const [scrolledUp, setScrolledUp] = useState(false)
+  const [keyboardVisible, setKeyboardVisible] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -75,6 +76,14 @@ export default function MessagesPage() {
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const onResize = () => setKeyboardVisible(window.innerHeight - vv.height > 150)
+    vv.addEventListener('resize', onResize)
+    return () => vv.removeEventListener('resize', onResize)
   }, [])
 
   // ── Realtime ─────────────────────────────────────────────
@@ -667,7 +676,7 @@ export default function MessagesPage() {
       )}
 
       {/* ── Messages ───────────────────────────────────────── */}
-      <div ref={messageListRef} className="flex-1 overflow-y-auto py-2 min-h-0">
+      <div ref={messageListRef} className="flex-1 overflow-y-auto py-2 min-h-0" style={{ overflowX: 'hidden' }}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3 px-8">
             <p className="text-4xl">💌</p>
@@ -845,7 +854,7 @@ export default function MessagesPage() {
       <div className="flex-none flex items-center gap-2 px-3 pt-3 border-t"
         style={{
           backgroundColor: '#1C1917', borderColor: '#3D3633',
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 88px)',
+          paddingBottom: keyboardVisible ? '10px' : 'calc(env(safe-area-inset-bottom, 16px) + 88px)',
         }}>
         <button onClick={() => setShowActions(!showActions)} disabled={sending}
           className="w-10 h-10 flex-none rounded-full flex items-center justify-center text-lg font-light transition-all disabled:opacity-40"
