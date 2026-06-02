@@ -111,7 +111,7 @@ export default function LoveLanguagePage() {
   const maxCount = Math.max(1, ...Object.values(myCounts), ...Object.values(partnerCounts))
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1C1917', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'rgba(28,25,23,0.55)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
       {/* Header */}
       <header className="px-4 pt-6 pb-4">
         <h1
@@ -270,7 +270,7 @@ export default function LoveLanguagePage() {
         >
           <div
             className="w-full max-w-lg rounded-t-3xl p-6"
-            style={{ backgroundColor: '#292524', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}
+            style={{ backgroundColor: '#292524', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', maxHeight: '90dvh', overflowY: 'auto' }}
           >
             <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ backgroundColor: '#3D3633' }} />
             {(() => {

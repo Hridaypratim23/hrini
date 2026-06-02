@@ -6,6 +6,76 @@ import Link from 'next/link'
 import { AppProvider, useApp } from '@/contexts/AppContext'
 import { createClient } from '@/lib/supabase'
 
+const ENGAGEMENT_PHOTOS = [
+  '/photos/engagement/DSC05787.jpg',
+  '/photos/engagement/DSC05793.jpg',
+  '/photos/engagement/DSC05736.jpg',
+  '/photos/engagement/DSC05773.jpg',
+  '/photos/engagement/DSC05727.jpg',
+  '/photos/engagement/DSC05317.jpg',
+]
+
+const SILHOUETTE = 'brightness(0.7) contrast(1.2)'
+
+function getSlot() {
+  return Math.floor(Date.now() / (15 * 60 * 1000)) % ENGAGEMENT_PHOTOS.length
+}
+
+function BackgroundPhoto() {
+  const [current, setCurrent] = useState<number>(() => getSlot())
+  const [prev, setPrev] = useState<number | null>(null)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const next = getSlot()
+      setCurrent((c) => {
+        if (next !== c) {
+          setPrev(c)
+          setTimeout(() => setPrev(null), 3000)
+          return next
+        }
+        return c
+      })
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <>
+      <style>{`
+        @keyframes sil-in { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes sil-out { from { opacity: 1 } to { opacity: 0 } }
+      `}</style>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {prev !== null && (
+          <img
+            key={`p${prev}`}
+            src={ENGAGEMENT_PHOTOS[prev]}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0, width: '100%', height: '100%',
+              objectFit: 'cover', filter: SILHOUETTE,
+              animation: 'sil-out 2.5s ease forwards',
+            }}
+          />
+        )}
+        <img
+          key={`c${current}`}
+          src={ENGAGEMENT_PHOTOS[current]}
+          alt=""
+          // @ts-ignore fetchpriority is valid HTML but not yet in React types
+          fetchpriority="high"
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', filter: SILHOUETTE,
+            animation: 'sil-in 2.5s ease forwards',
+          }}
+        />
+      </div>
+    </>
+  )
+}
+
 const MORE_ITEMS = [
   { href: '/morning-note', label: 'Notes', icon: '✍️', description: 'Morning notes & prompts' },
   { href: '/love-jar', label: 'Love Jar', icon: '💌', description: 'Secret love notes' },
@@ -55,8 +125,16 @@ function PersistentNav() {
     if (isOnMessages) {
       setUnreadCount(0)
       localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString())
+      if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {})
     }
   }, [isOnMessages])
+
+  // Keep app icon badge in sync with unread count while app is open
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return
+    if (unreadCount > 0) navigator.setAppBadge(unreadCount).catch(() => {})
+    else navigator.clearAppBadge().catch(() => {})
+  }, [unreadCount])
 
   // Load unread count and subscribe to realtime
   useEffect(() => {
@@ -123,7 +201,16 @@ function PersistentNav() {
                 <span className="text-xl leading-none relative">
                   {tab.icon}
                   {'badge' in tab && tab.badge && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+                    <span style={{
+                      position: 'absolute', top: '-6px', right: '-10px',
+                      minWidth: '17px', height: '17px', borderRadius: '9px',
+                      backgroundColor: '#ef4444', color: '#fff',
+                      fontSize: '0.55rem', fontWeight: 700, lineHeight: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0 3px',
+                    }}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
                   )}
                 </span>
                 <span style={{ fontSize: '0.65rem', color: isActive ? '#D4A0A7' : '#A8A29E', fontWeight: isActive ? '600' : '400' }}>
@@ -213,7 +300,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppProvider>
       <AuthGuard>
-        {children}
+        <BackgroundPhoto />
+        <div style={{ position: 'relative' }}>
+          {children}
+        </div>
         <PersistentNav />
       </AuthGuard>
     </AppProvider>

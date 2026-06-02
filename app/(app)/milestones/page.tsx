@@ -128,7 +128,7 @@ export default function MilestonesPage() {
   const pad = (n: number) => String(n).padStart(2, '0')
 
   return (
-    <div style={{ minHeight: '100svh', backgroundColor: '#0F0D0A', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
+    <div style={{ minHeight: '100svh', backgroundColor: 'rgba(15,13,10,0.55)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
       <style>{`
         @keyframes shimmer {
           0% { background-position: -200% center; }
@@ -149,6 +149,7 @@ export default function MilestonesPage() {
         .countdown-num { animation: tick-in 0.18s ease; }
         .ring-float { animation: float 3s ease-in-out infinite; }
         .glow-pulse { animation: pulse-glow 4s ease-in-out infinite; }
+        .eng-strip::-webkit-scrollbar { display: none; }
       `}</style>
 
       {/* ── Wedding Countdown Hero ─────────────────────────────── */}
@@ -230,6 +231,32 @@ export default function MilestonesPage() {
 
         {/* Divider */}
         <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, rgba(201,162,96,0.3), transparent)', margin: '0 24px' }} />
+      </div>
+
+      {/* ── Engagement Photos ─────────────────────────────────── */}
+      <div style={{ paddingTop: '28px' }}>
+        <div style={{ padding: '0 24px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#4A4440', fontWeight: 600 }}>Our Engagement</p>
+        </div>
+        <div className="eng-strip" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '4px', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          {[
+            '/photos/engagement/DSC05787.jpg',
+            '/photos/engagement/DSC05793.jpg',
+            '/photos/engagement/DSC05736.jpg',
+            '/photos/engagement/DSC05773.jpg',
+            '/photos/engagement/DSC05727.jpg',
+            '/photos/engagement/DSC05317.jpg',
+          ].map((src, i) => (
+            <div key={i} style={{ flexShrink: 0, scrollSnapAlign: 'start', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+              <img
+                src={src}
+                alt={`engagement ${i + 1}`}
+                style={{ height: '220px', width: 'auto', objectFit: 'cover', display: 'block' }}
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Timeline header ───────────────────────────────────── */}
